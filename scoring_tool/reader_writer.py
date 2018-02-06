@@ -9,23 +9,29 @@ import pandas as pd
 import stringdist
 
 
-def create_filenames_df(data_path, out_path, save_csv=False):
+def create_filenames_df(data_path, out_path, save_csv=False, given_class_company=None):
     # create a pandas dataframe with the filenames in our dataset
 
     df_files_dict = {
         'root': [],
         'file_name': [],
     }
-    for root, subdirs, df_files in os.walk(data_path):
-        for file_name in df_files:
+    for root, subdirs, files in os.walk(data_path):
+        for file_name in files:
             df_files_dict['root'].append(root[len(data_path):])
             df_files_dict['file_name'].append(file_name)
 
     df_files = pd.DataFrame.from_dict(df_files_dict)
     root_list = df_files['root'].values
     root_list = [root.split('/') for root in root_list]
-    df_files['class'] = [r.pop(0) for r in root_list]
-    df_files['company'] = [r.pop(0) for r in root_list]
+
+    if given_class_company is None:
+        df_files['class'] = [r.pop(0) for r in root_list]
+        df_files['company'] = [r.pop(0) for r in root_list]
+    else:
+        df_files['class'] = given_class_company[0]
+        df_files['company'] = given_class_company[1]
+
     df_files['root'] = ["/".join(r) for r in root_list]
     file_name_list = df_files['file_name'].values
     df_files['extension'] = [e.split('.')[-1] for e in file_name_list]
@@ -155,13 +161,14 @@ def save_df_with_some_cols_as_len(df, out_path, name, cols):
 
 
 def save_src_to(row, out_path, new_name, with_root_folders=True):
-    nested_folders = [out_path, new_name, row.loc['class'], row.loc['company']]
+    nested_folders = [new_name, row.loc['class'], row.loc['company']]
     if with_root_folders:
         root_folders = [x for x in row.loc['root'].split('/') if x not in ['', '.', '..']]
         nested_folders.extend(root_folders)
 
+    mkdir_path = out_path
     for folder in nested_folders:
-        mkdir_path = os.path.join(out_path, folder)
+        mkdir_path = os.path.join(mkdir_path, folder)
         if not os.path.exists(mkdir_path):
             os.mkdir(mkdir_path)
 
