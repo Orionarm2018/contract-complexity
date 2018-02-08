@@ -5,7 +5,16 @@ import pandas as pd
 
 
 def flatten(x):
-    return [item for sublist in x for item in sublist]
+    """flattens any nested list.
+    if is not list, converts to list first.
+    """
+    if not isinstance(x, list):
+        # print type(x)
+        x = list(x)
+    if isinstance(x, list) and len(x) > 0:
+        while any([isinstance(subitem, list) for subitem in x]):
+            x = [item for sublist in x for item in sublist]
+    return x
 
 
 def analyse_col_freq(df_files, out_path, save_csv=False):

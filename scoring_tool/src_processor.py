@@ -61,7 +61,7 @@ def analyse_src_contracts(df_files, verbose=False, save_path=None):
 
     if verbose or save_path is not None:
         # compute frequency of inherited files
-        inheritance_flat = flatten(flatten(df_files['inherited_contracts']))
+        inheritance_flat = flatten(df_files['inherited_contracts'])
         col_counts = pd.Series(inheritance_flat).value_counts(sort=True)
         if save_path is not None:
             col_counts.to_csv(os.path.join(save_path, 'counts_{}.csv'.format('inheritance')))
