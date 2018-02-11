@@ -140,6 +140,12 @@ def run_analysis():
     df = df.apply(get_file_src, axis=1, args=(data_path, True))
 
 
+def remove_import_lines(src):
+    # remove import lines from src
+    regex = "import .*;"
+    src = "\n".join([x for x in src.split("\n") if not re.match(regex, x)])
+    return src
+
 
 if __name__ == '__main__':
     run_analysis()

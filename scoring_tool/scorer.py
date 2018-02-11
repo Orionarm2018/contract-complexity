@@ -1,4 +1,8 @@
 
+from utils import flatten
+from analyser import count_project_indicators_ICO, count_project_indicators_token
+
+
 def compute_score_from_metrics(metrics, weights):
     """
     computes a normalized score from norm_metrics
@@ -12,13 +16,18 @@ def compute_score_from_metrics(metrics, weights):
     """
     # sanity check
     keys_diff = set(metrics.keys()) - set(weights.keys())
+    # TODO: allow to ommit some metrics by not defining the weight and just warn
     if len(keys_diff) > 0:
         raise KeyError("no weight provided for metric or missing metric: {}".format(keys_diff))
 
-    total_weight = sum(weights.values())
+    total_weight = sum([abs(x) for x in weights.values()])
     weighted_metrics = {}
     for key, value in metrics.items():
-        weighted_metrics[key] = value * weights[key] / (1.0 * total_weight)
+        if weights[key] >= 0:
+            weighted_metrics[key] = value * weights[key] / (1.0 * total_weight)
+        else:
+            # negative metric means that score has to be inverted
+            weighted_metrics[key] = (1.0 - value) * abs(weights[key]) / (1.0 * total_weight)
 
     score = sum(weighted_metrics.values())
 
@@ -55,16 +64,131 @@ def normalize_metrics(metrics, categoric_norm, numeric_norm):
     return norm_metrics
 
 
+def get_metric_imports_zeppelin(df, verbose):
+    imports_z = df.groupby(['class', 'company'])['imports_zeppelin'].sum()
+    imports_zeppelin = 'NO'
+    imports_zeppelin_num = 0
+    if len(imports_z) == 1:
+        num_z = 1 * imports_z.iloc[0]
+        if num_z > 0:
+            imports_zeppelin = 'YES'
+            imports_zeppelin_num = num_z / (1.0 * len(df))
+    else:
+        raise NotImplementedError("metric computation is implemented for one project at a time")
+
+    if verbose:
+        print "Imports Zeppelin: {} ({}/{})".format(imports_zeppelin, num_z, len(df))
+    return imports_zeppelin, imports_zeppelin_num
+
+
+def get_metric_inherits_per_contract(df):
+    num_inheritances = []
+    for i in df['inherited_contracts'].values:
+        inheritances_file = [len(flatten(x)) for x in i]
+        if len(inheritances_file) > 0:
+            num_inheritances.extend(inheritances_file)
+        else:
+            num_inheritances.append(0)
+
+    mean_inheritances = sum(num_inheritances) / (1.0 * len(num_inheritances))
+    max_inheritances = max(num_inheritances)
+    return mean_inheritances, max_inheritances
+
+
+def get_metric_lines_per_joined_file(df, comments=False):
+    if comments:
+        line_lengths = df[df['is_imported'] == False]['joined_comments'].apply(lambda x: len(x.split('\n')))
+    else:
+        line_lengths = df[df['is_imported'] == False]['joined_src'].apply(lambda x: len(x.split('\n')))
+    total_line_lengths = sum(line_lengths)
+    mean_line_lengths = total_line_lengths / len(line_lengths)
+    max_line_lengths = max(line_lengths)
+    return total_line_lengths, mean_line_lengths, max_line_lengths
+
+
+def get_metric_ICO(df, verbose):
+    _, indicators = count_project_indicators_ICO(df, verbose, add_to_df=False)
+    ind_binary = []
+    for ind in list(indicators):
+        ind_binary.append(indicators[ind].iloc[0] > 0)
+    ind_num = sum(ind_binary)
+    is_ico = 'NO'
+    if ind_num > 0:
+        is_ico = 'YES'
+    if ind_num >= 3:
+        is_ico = 'SURE'
+    return is_ico
+
+
+def get_metric_token(df, verbose):
+    _, indicators = count_project_indicators_token(df, verbose, add_to_df=False)
+    ind_binary = []
+    for ind in list(indicators):
+        ind_binary.append(indicators[ind].iloc[0] > 0)
+    ind_num = sum(ind_binary)
+    has_token = 'NO'
+    if ind_num > 0:
+        has_token = 'YES'
+    if ind_num >= 3:
+        has_token = 'SURE'
+    return has_token
+
+
+def get_comments_to_src_ratio(df):
+    src_total, _, _ = get_metric_lines_per_joined_file(df, comments=False)
+    comments_total, _, _ = get_metric_lines_per_joined_file(df, comments=True)
+    ratio = comments_total / (1.0 * src_total)
+    return ratio
+
+
+def get_all_metrics(df, verbose, len_files, len_not_imported):
+    # TODO: add code parsing metrics
+    # TODO: maybe add these:
+    # nesting depth
+    # total number of symbols
+    # number of if, for statements
+    # number of functions
+    # function-lengths
+
+    metrics = {}
+
+    metrics['imports_zeppelin'], metrics['imports_zeppelin_num'] = get_metric_imports_zeppelin(df, verbose)
+
+    metrics['len_files'] = len_files
+    metrics['not_imported_ratio'] = len_not_imported / (1.0 * len_files)
+
+    imports_depths = df[df['is_imported']==False].groupby(['class', 'company'])['imports_depth']
+    metrics['import_depth_mean'] = imports_depths.mean().iloc[0]
+    metrics['import_depth_max'] = imports_depths.max().iloc[0]
+
+    metrics['contracts_num'] = len(set(flatten(df['joined_contracts'].values)))
+
+    metrics['inheritances_mean'], metrics['inheritances_max'] = get_metric_inherits_per_contract(df)
+
+    metrics['lines_total'], metrics['lines_mean'], metrics['lines_max'] = get_metric_lines_per_joined_file(df)
+
+    metrics['is_ICO'] = get_metric_ICO(df, verbose)
+    metrics['has_token'] = get_metric_token(df, verbose)
+
+    metrics['comments_ratio'] = get_comments_to_src_ratio(df)
+
+    # print list(df)
+    if verbose:
+        print metrics
+
+    return metrics
+
+
 def test_score():
     metrics = {
-        'not_ico': 'notICO',
+        'ico': 'notICO',
         'money': 'medium',
         'liability': 'low',
         'src_complexity': 7,
     }
 
     categoric_norm = {
-        'not_ico': {'notICO': 1, 'ICO': 0.5},
+        'ico': {'notICO': 0, 'ICO': 1},
         'money': {'low': 0.0, 'medium': 0.5, 'high': 1.0},
         'liability': {'low': 0.0, 'medium': 0.5, 'high': 1.0},
     }
@@ -82,7 +206,7 @@ def test_score():
     # }
 
     weights = {
-        'not_ico': 2,
+        'ico': -2,
         'money': 1,
         'liability': 1,
         'src_complexity': 2,

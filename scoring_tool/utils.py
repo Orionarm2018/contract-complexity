@@ -31,5 +31,10 @@ def analyse_col_freq(df_files, out_path, save_csv=False):
         if save_csv:
             col_counts.to_csv(os.path.join(out_path, 'counts_{}.csv'.format(col)))
 
-    return
+    return unique_counts
 
+
+def analyse_col_freq_single(df_col):
+    # short analysis: count unique counts of entries in a column
+    col_counts = pd.Series.value_counts(df_col, sort=True)
+    return col_counts

@@ -1,5 +1,7 @@
+import pandas as pd
 
 from utils import flatten
+from src_processor import remove_import_lines
 
 
 def import_contains_inherited_contract(import_match, inherited_contracts, verbose=False):
@@ -110,84 +112,6 @@ def match_imports_with_files(df_files, files_zeppelin=None, import_only_inherite
     return df_files
 
 
-# def get_all_imports_idx(imports_idx, idx_set, depth_list, depth, max_depth):
-#     # print 'imports_idx: ', imports_idx
-#     # print 'idx_set: ', idx_set
-#     # print 'depth: ', depth
-#     # print 'depth_list: ', depth_list
-#     depth += 1
-#     if depth <= max_depth:
-#         for idx in imports_idx:
-#             # print 'idx: ', idx
-#             if idx not in idx_set:
-#                 idx_set.add(idx)
-#                 depth_list.append(depth)
-#                 if idx >= 0:
-#                     next_imports_idx = df_files.loc[idx, 'imports_idx']
-#                     if len(next_imports_idx) > 0:
-#                         # print 'next_imports_idx: ', next_imports_idx
-#                         _ = get_all_imports_idx(next_imports_idx, idx_set, depth_list, depth, max_depth)
-#
-#     else:
-#         print "max_depth reached for :"
-#         print idx_set
-#         print depth_list
-#     # TODO: also import zeppelin files (and their imports)?
-#     # print 'reached return: ', idx_list
-#     # print 'depth: ', depth, depth_list
-#     return idx_set
-#
-#
-# def get_all_imports_idx_from_row(row):
-#     idx_set = set([row['ID']])
-#     depth_list = [0]
-#     depth = 0
-#     # print row
-#     if join_all or not row.loc['is_imported']:
-#         return get_all_imports_idx(row.loc['imports_idx'], idx_set, depth_list, depth, max_depth)
-#     else:
-#         return set()
-#
-#
-# def get_all_imports_depth(imports_idx, idx_set, depth_list, depth, max_depth):
-#     #     print 'imports_idx: ', imports_idx
-#     #     print 'idx_set: ', idx_set
-#     #     print 'depth: ', depth
-#     #     print 'depth_list: ', depth_list
-#     depth += 1
-#     if depth <= max_depth:
-#         for idx in imports_idx:
-#             #         print 'idx: ', idx
-#             if idx not in idx_set:
-#                 idx_set.add(idx)
-#                 depth_list.append(depth)
-#                 if idx >= 0:
-#                     next_imports_idx = df_files.loc[idx, 'imports_idx']
-#                     if len(next_imports_idx) > 0:
-#                         #             print 'next_imports_idx: ', next_imports_idx
-#                         _ = get_all_imports_idx(next_imports_idx, idx_set, depth_list, depth, max_depth)
-#
-#     else:
-#         print "max_depth reached for :"
-#         print idx_set
-#         print depth_list
-#         # TODO: also import zeppelin files (and their imports)?
-#     #     print 'reached return: ', idx_list
-#     #     print 'depth: ', depth, depth_list
-#     return max(depth_list)
-#
-#
-# def get_all_imports_depth_from_row(row):
-#     idx_set = set([row['ID']])
-#     depth_list = [0]
-#     depth = 0
-#     #     print row
-#     if join_all or row.loc['is_imported'] == False:
-#         return get_all_imports_depth(row.loc['imports_idx'], idx_set, depth_list, depth, max_depth)
-#     else:
-#         return -1
-
-
 def get_all_imports_idx_and_depth(df, imports_idx, idx_set, depth_list, depth, max_depth):
     #     print 'imports_idx: ', imports_idx
     #     print 'idx_set: ', idx_set
@@ -238,21 +162,44 @@ def add_all_imports_idx_and_depth_to_row(row, df, join_all, max_depth):
     return row
 
 
-# def recursively_join_imports(df_files, df_zeppelin, join_all, max_depth):
-#     if df_zeppelin is not None:
-#         df_files = df_files.append(df_zeppelin)
-#     df_files = df_files.apply(add_all_imports_idx_and_depth_to_row, axis=1, args=(join_all, max_depth))
-#     # df_files['imports_idx_all'] = df_files['imports_idx_all'].apply(list)
-#     # df_files['imports_idx_all'] = df_files['imports_idx_all'].apply(flatten)
-#     # df_files['imports_depth'] = df_files.apply(get_all_imports_depth_from_row, axis=1)
-#     if df_zeppelin is not None:
-#         print "hello"
-#     return df_files
-
-
-def recurse_imports(df, join_all, max_depth):
-    for index, row in df.iterrows():
-        row_new = add_all_imports_idx_and_depth_to_row(row, df, join_all, max_depth)
-        df.loc[index] = row_new
+def recurse_imports(df, join_all, max_depth, verbose=False):
+    # recursively find imports idxs up to max_depth
+    df = df.apply(add_all_imports_idx_and_depth_to_row, axis=1, args=(df, join_all, max_depth))
     return df
 
+
+def join_imports(row, df_files):
+    row.loc['joined_files'] = []
+    row.loc['joined_contracts'] = []
+    row.loc['joined_roots'] = []
+    src_joined = []
+    comments_joined = []
+    for idx in row.loc['imports_idx_all']:
+        if idx >= 0:
+            row.loc['joined_files'].append(df_files.loc[idx, 'file_name'])
+            row.loc['joined_contracts'].extend(df_files.loc[idx, 'contract_name'])
+            row.loc['joined_roots'].extend(df_files.loc[idx, 'root'].split('/'))
+            src_joined.append(df_files.loc[idx, 'src'])
+            comments_joined.append(df_files.loc[idx, 'comments'])
+            if df_files.loc[idx, 'imports_zeppelin']:
+                row.loc['imports_zeppelin'] = True
+#             if df_files.loc[idx, 'contains_zeppelin'] == True:
+#                 row.loc['contains_zeppelin'] = True
+    row.loc['joined_src'] = "\n".join(src_joined)
+    row.loc['joined_comments'] = "\n".join(comments_joined)
+    row.loc['joined_contracts'] = list(set(row.loc['joined_contracts']))
+    row.loc['joined_roots'] = list(set(row.loc['joined_roots'] ))
+    row.loc['joined_roots'] = [x for x in row.loc['joined_roots'] if x not in ['', '.', '..']]
+    del row['imports']
+    del row['imports_idx']
+    del row['imports_path']
+    # del row['inherited_contracts']
+#     del row['is_imported']
+    return row
+
+
+def join_imported_files(df_files):
+    # remove_import_lines(df_joined.loc[4, 'src'])
+    df_files['src'] = df_files['src'].apply(remove_import_lines)
+    df_files = df_files.apply(join_imports, axis=1, args=(df_files,))
+    return df_files

@@ -184,12 +184,18 @@ def save_src_to(row, out_path, new_name, with_root_folders=True):
         with_root=with_root_folders,
         comments=True,
     )
+    if new_name == 'joined':
+        src = row.loc['joined_src']
+        comments = row.loc['joined_comments']
+    else:
+        src = row.loc['src']
+        comments = row.loc['comments']
 
     with open(file_name, 'w')as f:
-        f.write(row.loc['src'])
+        f.write(src)
     if 'comments' in list(row.index.values):
         with open(file_name_comments, 'w')as f:
-            f.write(row.loc['comments'])
+            f.write(comments)
 
 
 def run_on_local_files(data_path, out_path):
