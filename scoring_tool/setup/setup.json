@@ -1,0 +1,9 @@
+{
+  "data_path": "/home/ourownstory/Documents/SOL/data/",
+  "out_path": "/home/ourownstory/Documents/SOL/derived/test2/",
+  "save_results": false,
+  "include_zeppelin": true,
+  "verbose": false,
+  "join_all": true,
+  "max_depth": 10
+}
