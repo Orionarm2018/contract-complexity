@@ -1,0 +1,18 @@
+{
+  "imports_zeppelin_num": 0.5,
+  "len_files": 100,
+  "not_imported_ratio": 1.0,
+  "import_depth_mean": 2,
+  "import_depth_max": 5,
+  "contracts_num": 100,
+  "inheritances_mean": 2,
+  "inheritances_max": 5,
+  "lines_total": 2000,
+  "lines_mean": 200,
+  "lines_max": 500,
+  "comments_ratio": 1.0,
+  "'function'": 100,
+  "'return'": 100,
+  "'returns'": 100,
+  "'{'": 100
+}

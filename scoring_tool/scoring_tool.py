@@ -1,4 +1,6 @@
 import os
+import json
+import argparse
 import pandas as pd
 from df_builder import get_complete_df_files
 from scorer import normalize_metrics, compute_score_from_metrics, get_all_metrics
@@ -6,7 +8,7 @@ from scorer import normalize_metrics, compute_score_from_metrics, get_all_metric
 
 def get_score_for_project(
         data_path, save_path, project_class, company_name,
-        metrics_thresholds, categoric_norm, numeric_norm, weights,
+        categoric_norm, numeric_norm, weights,
         include_zeppelin=False, verbose=False, join_all=True, max_depth=10,):
     # WIP
 
@@ -24,65 +26,27 @@ def get_score_for_project(
     return score, metrics
 
 
-def test_project_score(data_path, out_path, project_class, project_name):
+def test_project_score(data_path, out_path, project_class, project_name, setup_args=None):
+
+    project_path = os.path.join(data_path, project_class, project_name)
+    if not os.path.exists(project_path):
+        raise LookupError("The specified path does not exist: {}".format(project_path))
 
     if not os.path.exists(out_path):
         os.mkdir(out_path)
 
-    metrics_thresholds = {
-        # 'zeppelin_many': 0.2,
-    }
-    categoric_norm = {
-        'imports_zeppelin': {'NO': 0.0, 'YES': 1.0},
-        'is_ICO': {'NO': 0.0, 'MAYBE': 0.7, 'SURE': 1.0},
-        'has_token': {'NO': 0.0, 'MAYBE': 0.7, 'SURE': 1.0},
-    }
-    numeric_norm = {
-        'imports_zeppelin_num': 0.5,
-        'len_files': 100,
-        'not_imported_ratio': 1.0,
-        'import_depth_mean': 2,
-        'import_depth_max': 5,
-        'contracts_num': 100,
-        'inheritances_mean': 2,
-        'inheritances_max': 5,
-        'lines_total': 2000,
-        'lines_mean': 200,
-        'lines_max': 500,
-        'comments_ratio': 1.0,
-        "'function'": 100,
-        "'return'": 100,
-        "'returns'": 100,
-        "'{'": 100,
-    }
-    weights = {
-        'imports_zeppelin_num': -1,
-        'imports_zeppelin': -2,
-        'len_files': 0,
-        'not_imported_ratio': 0,
-        'import_depth_mean': 0,
-        'import_depth_max': 1,
-        'contracts_num': 1,
-        'inheritances_mean': 0,
-        'inheritances_max': 1,
-        'lines_total': 1,
-        'lines_mean': 0,
-        'lines_max': 1,
-        'is_ICO': -2,
-        'has_token': 1,
-        'comments_ratio': -1,
-        "'function'": 1,
-        "'return'": 1,
-        "'returns'": 1,
-        "'{'": 1,
-    }
+    with open(setup_args['json_weights'], 'r') as f:
+        weights = json.load(f)
+    with open(setup_args['json_categoric_norm'], 'r') as f:
+        categoric_norm = json.load(f)
+    with open(setup_args['json_numeric_norm'], 'r') as f:
+        numeric_norm = json.load(f)
 
     score, metrics = get_score_for_project(
         data_path=data_path,
         save_path=out_path,
         project_class=project_class,
         company_name=project_name,
-        metrics_thresholds=metrics_thresholds,
         categoric_norm=categoric_norm,
         numeric_norm=numeric_norm,
         weights=weights,
@@ -94,16 +58,17 @@ def test_project_score(data_path, out_path, project_class, project_name):
     return score, metrics
 
 
-def test():
+def test(setup_args):
     # zeppelin_folder = '/home/ourownstory/Documents/SOL/data/Zeppelin/Zeppelin/'
     score, metrics = test_project_score(
         data_path='/home/ourownstory/Documents/SOL/data/',
         out_path='/home/ourownstory/Documents/SOL/derived/test2/',
-        project_class='ICO',
-        project_name='Monetha',
+        project_class='notICO',
+        project_name='Solidified',
+        setup_args=setup_args,
     )
-    print score
     print metrics
+    print score
 
 
 def test_all():
@@ -142,6 +107,15 @@ def test_all():
     print df_metrics
 
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--setup", type=str, help="JSON filename of setup parameters")
+    args = parser.parse_args()
+    with open(args.setup, 'r') as f:
+        setup_args = json.load(f)
+    test(setup_args)
+    # test_all(setup_args)
+
+
 if __name__ == '__main__':
-    # test()
-    test_all()
+    main()

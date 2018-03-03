@@ -1,0 +1,21 @@
+{
+  "imports_zeppelin_num": -1,
+  "imports_zeppelin": -2,
+  "len_files": 0,
+  "not_imported_ratio": 0,
+  "import_depth_mean": 0,
+  "import_depth_max": 1,
+  "contracts_num": 1,
+  "inheritances_mean": 0,
+  "inheritances_max": 1,
+  "lines_total": 1,
+  "lines_mean": 0,
+  "lines_max": 1,
+  "is_ICO": -2,
+  "has_token": 1,
+  "comments_ratio": -1,
+  "'function'": 1,
+  "'return'": 1,
+  "'returns'": 1,
+  "'{'": 1
+}

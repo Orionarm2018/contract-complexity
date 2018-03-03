@@ -1,0 +1,5 @@
+{
+  "json_weights": "weights.json",
+  "json_categoric_norm": "categoric_norm.json",
+  "json_numeric_norm": "numeric_norm.json"
+}
