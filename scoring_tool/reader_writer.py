@@ -106,14 +106,17 @@ def read_src_nocomments(file_name, return_also_comments=False):
                 comments_list.append(line)
                 continue
             # inline comments
-            if re.search('//', line):
+            if re.search('[\s]+//', line) or re.search('//[\s]+', line):
                 inline_comment = re.findall('[\s]*//.*\n', line)
                 comments_list.extend(inline_comment)
                 line = re.sub('[\s]*//.*\n', '\n', line)
-                continue
 
             # add current src line
             src_list.append(line)
+
+        # add final newline
+        src_list.append('\n')
+        comments_list.append('\n')
 
         if return_also_comments:
             return ''.join(src_list), ''.join(comments_list)
@@ -216,7 +219,7 @@ if __name__ == '__main__':
     DATA_PATH = '/home/ourownstory/Documents/SOL/data/'
     # zeppelin_folder = '/home/ourownstory/Documents/SOL/data/Zeppelin/Zeppelin/'
     # os.listdir(data_path)
-    OUT_PATH = '/home/ourownstory/Documents/SOL/derived/'
+    OUT_PATH = '/home/ourownstory/Documents/SOL/derived/test/'
 
     run_on_local_files(DATA_PATH, OUT_PATH)
 

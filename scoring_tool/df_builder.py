@@ -8,6 +8,7 @@ from utils import analyse_col_freq, flatten
 from import_matcher import match_imports_with_files, recurse_imports, join_imported_files
 from analyser import detect_crowdsale_presale_ICO, detect_coin_token
 from analyser import count_project_indicators_token, count_project_indicators_ICO
+from tokenizer import tokenize_string_from_row
 
 
 def get_complete_df_files(data_path, save_path, project_class, company_name, include_zeppelin, verbose, join_all, max_depth):
@@ -63,6 +64,8 @@ def get_complete_df_files(data_path, save_path, project_class, company_name, inc
         _ = df.apply(save_src_to, axis=1, args=(save_path, 'joined'))
         cols_not_save = ['src', 'joined_src', 'comments', 'joined_comments']
         save_df_with_some_cols_as_len(df, save_path, name='joined', cols=cols_not_save)
+
+    df = df.apply(tokenize_string_from_row, axis=1)
 
     return df, len_files, len_not_imported
 

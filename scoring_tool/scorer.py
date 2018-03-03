@@ -1,6 +1,7 @@
 
 from utils import flatten
 from analyser import count_project_indicators_ICO, count_project_indicators_token
+from tokenizer import get_token_freq
 
 
 def compute_score_from_metrics(metrics, weights):
@@ -141,6 +142,21 @@ def get_comments_to_src_ratio(df):
     return ratio
 
 
+def get_token_metrics(df):
+    freq = get_token_freq(df)
+    tokens_num = {
+        "'function'": 0,
+        "'return'": 0,
+        "'returns'": 0,
+        "'{'": 0,
+    }
+    for t in tokens_num:
+        num_t = freq[freq['value'] == t]['num'].values
+        if len(num_t) == 1:
+            tokens_num[t] = num_t[0]
+    return tokens_num
+
+
 def get_all_metrics(df, verbose, len_files, len_not_imported):
     # TODO: add code parsing metrics
     # TODO: maybe add these:
@@ -171,6 +187,10 @@ def get_all_metrics(df, verbose, len_files, len_not_imported):
     metrics['has_token'] = get_metric_token(df, verbose)
 
     metrics['comments_ratio'] = get_comments_to_src_ratio(df)
+
+    token_metrics = get_token_metrics(df)
+    # TODO: give better names to the token metrics, define normalization constants
+    metrics.update(token_metrics)
 
     # print list(df)
     if verbose:

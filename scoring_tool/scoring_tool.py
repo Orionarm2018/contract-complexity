@@ -19,6 +19,7 @@ def get_score_for_project(
 
     if verbose:
         print "Score: {}".format(score)
+        print "df columns: {}".format(list(df))
 
     return score, metrics
 
@@ -49,6 +50,10 @@ def test_project_score(DATA_PATH, OUT_PATH, project_class, project_name):
         'lines_mean': 200,
         'lines_max': 500,
         'comments_ratio': 1.0,
+        "'function'": 100,
+        "'return'": 100,
+        "'returns'": 100,
+        "'{'": 100,
     }
     weights = {
         'imports_zeppelin_num': -1,
@@ -66,6 +71,10 @@ def test_project_score(DATA_PATH, OUT_PATH, project_class, project_name):
         'is_ICO': -2,
         'has_token': 1,
         'comments_ratio': -1,
+        "'function'": 1,
+        "'return'": 1,
+        "'returns'": 1,
+        "'{'": 1,
     }
 
     score, metrics = get_score_for_project(
@@ -78,7 +87,7 @@ def test_project_score(DATA_PATH, OUT_PATH, project_class, project_name):
         numeric_norm=numeric_norm,
         weights=weights,
         include_zeppelin=True,
-        verbose=True,
+        verbose=False,
         join_all=True,
         max_depth=10,
     )
@@ -107,7 +116,7 @@ def test_all():
             score, metrics = test_project_score(DATA_PATH, OUT_PATH, project_class, project_name)
             metrics_to_df = {}
             metrics_to_df['class'] = project_class
-            metrics_to_df['company'] = project_class
+            metrics_to_df['company'] = project_name
             metrics_to_df['score'] = score
             metrics_to_df.update(metrics)
             df_metrics_this = pd.DataFrame.from_records([metrics_to_df])
