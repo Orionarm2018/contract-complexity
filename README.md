@@ -1,5 +1,5 @@
 # Code Complexity Estimator for Smart Contracts
-Author: Oskar Triebe
+Author: Oskar Triebe, February 2018
 
 ## Purpose
 This is a scoring tool to estimate the complexity of a project based on its source code.

@@ -24,18 +24,18 @@ def get_score_for_project(
     return score, metrics
 
 
-def test_project_score(DATA_PATH, OUT_PATH, project_class, project_name):
+def test_project_score(data_path, out_path, project_class, project_name):
 
-    if not os.path.exists(OUT_PATH):
-        os.mkdir(OUT_PATH)
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
 
     metrics_thresholds = {
         # 'zeppelin_many': 0.2,
     }
     categoric_norm = {
         'imports_zeppelin': {'NO': 0.0, 'YES': 1.0},
-        'is_ICO': {'NO': 0.0, 'YES': 0.7, 'SURE': 1.0},
-        'has_token': {'NO': 0.0, 'YES': 0.7, 'SURE': 1.0},
+        'is_ICO': {'NO': 0.0, 'MAYBE': 0.7, 'SURE': 1.0},
+        'has_token': {'NO': 0.0, 'MAYBE': 0.7, 'SURE': 1.0},
     }
     numeric_norm = {
         'imports_zeppelin_num': 0.5,
@@ -78,8 +78,8 @@ def test_project_score(DATA_PATH, OUT_PATH, project_class, project_name):
     }
 
     score, metrics = get_score_for_project(
-        data_path=DATA_PATH,
-        save_path=OUT_PATH,
+        data_path=data_path,
+        save_path=out_path,
         project_class=project_class,
         company_name=project_name,
         metrics_thresholds=metrics_thresholds,
@@ -95,36 +95,50 @@ def test_project_score(DATA_PATH, OUT_PATH, project_class, project_name):
 
 
 def test():
-    DATA_PATH = '/home/ourownstory/Documents/SOL/data/'
     # zeppelin_folder = '/home/ourownstory/Documents/SOL/data/Zeppelin/Zeppelin/'
-    # os.listdir(data_path)
-    OUT_PATH = '/home/ourownstory/Documents/SOL/derived/test/'
-
-    test_project_score(DATA_PATH, OUT_PATH, project_class='notICO', project_name='Solidified')
+    score, metrics = test_project_score(
+        data_path='/home/ourownstory/Documents/SOL/data/',
+        out_path='/home/ourownstory/Documents/SOL/derived/test2/',
+        project_class='ICO',
+        project_name='Monetha',
+    )
+    print score
+    print metrics
 
 
 def test_all():
-    DATA_PATH = '/home/ourownstory/Documents/SOL/data/'
+    data_path = '/home/ourownstory/Documents/SOL/data/'
     # zeppelin_folder = '/home/ourownstory/Documents/SOL/data/Zeppelin/Zeppelin/'
     # os.listdir(data_path)
-    OUT_PATH = '/home/ourownstory/Documents/SOL/derived/test/'
+    out_path = '/home/ourownstory/Documents/SOL/derived/test/'
 
     df_metrics = pd.DataFrame()
     index = 0
-    for project_class in os.listdir(DATA_PATH):
-        for project_name in os.listdir(os.path.join(DATA_PATH, project_class)):
-            score, metrics = test_project_score(DATA_PATH, OUT_PATH, project_class, project_name)
-            metrics_to_df = {}
-            metrics_to_df['class'] = project_class
-            metrics_to_df['company'] = project_name
-            metrics_to_df['score'] = score
+    for project_class in os.listdir(data_path):
+        for project_name in os.listdir(os.path.join(data_path, project_class)):
+            # print(project_class, project_name)
+            score, metrics = test_project_score(
+                data_path=data_path,
+                out_path=out_path,
+                project_class=project_class,
+                project_name=project_name,
+            )
+            metrics_to_df = {
+                'class': project_class,
+                'company': project_name,
+                'score': score,
+            }
+            print metrics_to_df
             metrics_to_df.update(metrics)
             df_metrics_this = pd.DataFrame.from_records([metrics_to_df])
+            name_individual_df = 'df_metrics_{}_{}.csv'.format(project_class, project_name)
+            df_metrics_this.to_csv(os.path.join(out_path, name_individual_df))
+            # add to all projects df
             df_metrics = df_metrics.append(df_metrics_this, ignore_index=True)
-            df_metrics_this.to_csv(os.path.join(OUT_PATH, 'df_{}_{}_{}.csv'.format('metrics', project_class, project_name)))
             index += 1
-
-    df_metrics.to_csv(os.path.join(OUT_PATH, 'df_{}_all.csv'.format('metrics')))
+    # save df containing all projects
+    df_metrics.to_csv(os.path.join(out_path, 'df_metrics_all.csv'))
+    print("All metrics:")
     print df_metrics
 
 

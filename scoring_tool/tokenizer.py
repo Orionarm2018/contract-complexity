@@ -28,8 +28,7 @@ def tokenize_string(string):
 
 
 def tokenize_string_from_row(row):
-    #     filename = get_filename_for_row(row)
-    #     print filename
+    # print row['file_name']
     tokens_dict = tokenize_string(row['src'])
     row['lines'] = tokens_dict['line_se']
     row['types'] = tokens_dict['type']

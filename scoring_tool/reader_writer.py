@@ -97,14 +97,34 @@ def read_src_nocomments(file_name, return_also_comments=False):
     with open(file_name, 'r') as f:
         src_list = []
         comments_list = []
+        open_multiline_comment = False
         for line in f.readlines():
             # skip pragma
             if re.match('pragma solidity .*;', line.strip()):
+                # comments_list.append(line)
                 continue
-            # single or multiline comments
-            if re.match('/', line.strip()) or re.match('\*', line.strip()):
+            # single line comments
+            if re.match('//', line.strip()):
                 comments_list.append(line)
                 continue
+            # multiline comments: start
+            if re.match('/\*', line.strip()):
+                if not re.search('\*/', line.strip()):
+                    open_multiline_comment = True
+                comments_list.append(line)
+                continue
+            # multiline comments: end
+            if re.match('\*/', line.strip()) or re.match('\*\*/', line.strip()):
+                open_multiline_comment = False
+                comments_list.append(line)
+                continue
+            # in-progress multiline comment
+            if re.match('\*', line.strip()) or open_multiline_comment:
+                if re.search('\*/', line.strip()):
+                    open_multiline_comment = False
+                comments_list.append(line)
+                continue
+
             # inline comments
             if re.search('[\s]+//', line) or re.search('//[\s]+', line):
                 inline_comment = re.findall('[\s]*//.*\n', line)
@@ -117,6 +137,11 @@ def read_src_nocomments(file_name, return_also_comments=False):
         # add final newline
         src_list.append('\n')
         comments_list.append('\n')
+
+        # if 'todebug.sol' in file_name:
+        #     print(file_name)
+        #     print(src_list)
+        #     print(comments_list)
 
         if return_also_comments:
             return ''.join(src_list), ''.join(comments_list)

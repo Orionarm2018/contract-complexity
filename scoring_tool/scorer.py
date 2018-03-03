@@ -115,7 +115,7 @@ def get_metric_ICO(df, verbose):
     ind_num = sum(ind_binary)
     is_ico = 'NO'
     if ind_num > 0:
-        is_ico = 'YES'
+        is_ico = 'MAYBE'
     if ind_num >= 3:
         is_ico = 'SURE'
     return is_ico
@@ -129,7 +129,7 @@ def get_metric_token(df, verbose):
     ind_num = sum(ind_binary)
     has_token = 'NO'
     if ind_num > 0:
-        has_token = 'YES'
+        has_token = 'MAYBE'
     if ind_num >= 3:
         has_token = 'SURE'
     return has_token
@@ -158,7 +158,6 @@ def get_token_metrics(df):
 
 
 def get_all_metrics(df, verbose, len_files, len_not_imported):
-    # TODO: add code parsing metrics
     # TODO: maybe add these:
     # nesting depth
     # total number of symbols
@@ -173,7 +172,7 @@ def get_all_metrics(df, verbose, len_files, len_not_imported):
     metrics['len_files'] = len_files
     metrics['not_imported_ratio'] = len_not_imported / (1.0 * len_files)
 
-    imports_depths = df[df['is_imported']==False].groupby(['class', 'company'])['imports_depth']
+    imports_depths = df[df['is_imported'] == False].groupby(['class', 'company'])['imports_depth']
     metrics['import_depth_mean'] = imports_depths.mean().iloc[0]
     metrics['import_depth_max'] = imports_depths.max().iloc[0]
 
