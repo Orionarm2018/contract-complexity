@@ -1,3 +1,4 @@
+import re
 
 from utils import flatten
 from analyser import count_project_indicators_ICO, count_project_indicators_token
@@ -154,17 +155,36 @@ def get_token_metrics(df):
         num_t = freq[freq['value'] == t]['num'].values
         if len(num_t) == 1:
             tokens_num[t] = num_t[0]
+    tokens_num["return_per_returns"] = tokens_num["'return'"] / (1.0 * tokens_num["'returns'"] + 1e-9)
+    del tokens_num["'return'"]
     return tokens_num
 
 
-def get_all_metrics(df, verbose, len_files, len_not_imported):
-    # TODO: maybe add these:
-    # nesting depth
-    # total number of symbols
-    # number of if, for statements
-    # number of functions
-    # function-lengths
+def get_string_matches(df, target_name, target_regex, include_comments=False):
+    df[target_name] = df['src'].apply(lambda x: len(re.findall(target_regex, x)))
+    if include_comments:
+        df[target_name] = df[target_name] + df['comments'].apply(lambda x: len(re.findall(target_regex, x)))
+    string_matches = df.groupby(['class', 'company'])[target_name].sum()
+    return string_matches.iloc[0]
 
+
+def get_regex_metrics(df):
+    regex_metrics = {
+        "transfer": '\.transfer\(',
+        "send": '\.send\(',
+        "call_value": '\.call\.value\(',
+    }
+    regex_metrics_with_comments = {
+        "random": 'random',
+    }
+    for target_name, target_regex in regex_metrics.items():
+        regex_metrics[target_name] = get_string_matches(df, target_name, target_regex, include_comments=False)
+    for target_name, target_regex in regex_metrics_with_comments.items():
+        regex_metrics[target_name] = get_string_matches(df, target_name, target_regex, include_comments=True)
+    return regex_metrics
+
+
+def get_all_metrics(df, verbose, len_files, len_not_imported):
     metrics = {}
 
     metrics['imports_zeppelin'], metrics['imports_zeppelin_num'] = get_metric_imports_zeppelin(df, verbose)
@@ -188,8 +208,10 @@ def get_all_metrics(df, verbose, len_files, len_not_imported):
     metrics['comments_ratio'] = get_comments_to_src_ratio(df)
 
     token_metrics = get_token_metrics(df)
-    # TODO: give better names to the token metrics, define normalization constants
     metrics.update(token_metrics)
+
+    regex_metrics = get_regex_metrics(df)
+    metrics.update(regex_metrics)
 
     # print list(df)
     if verbose:

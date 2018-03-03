@@ -26,7 +26,7 @@ def get_score_for_project(
     return score, metrics
 
 
-def test_project_score(data_path, out_path, project_class, project_name, setup_args=None):
+def test_project_score(data_path, out_path, project_class, project_name, setup_args):
 
     project_path = os.path.join(data_path, project_class, project_name)
     if not os.path.exists(project_path):
@@ -71,7 +71,7 @@ def test(setup_args):
     print score
 
 
-def test_all():
+def test_all(setup_args):
     data_path = '/home/ourownstory/Documents/SOL/data/'
     # zeppelin_folder = '/home/ourownstory/Documents/SOL/data/Zeppelin/Zeppelin/'
     # os.listdir(data_path)
@@ -87,6 +87,7 @@ def test_all():
                 out_path=out_path,
                 project_class=project_class,
                 project_name=project_name,
+                setup_args=setup_args,
             )
             metrics_to_df = {
                 'class': project_class,
@@ -113,8 +114,8 @@ def main():
     args = parser.parse_args()
     with open(args.setup, 'r') as f:
         setup_args = json.load(f)
-    test(setup_args)
-    # test_all(setup_args)
+    # test(setup_args)
+    test_all(setup_args)
 
 
 if __name__ == '__main__':

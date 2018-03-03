@@ -1,5 +1,5 @@
 {
     "imports_zeppelin": {"NO": 0.0, "YES": 1.0},
-    "is_ICO": {"NO": 0.0, "MAYBE": 0.7, "SURE": 1.0},
-    "has_token": {"NO": 0.0, "MAYBE": 0.7, "SURE": 1.0}
+    "is_ICO": {"NO": 0.0, "MAYBE": 0.3, "SURE": 1.0},
+    "has_token": {"NO": 0.0, "MAYBE": 0.3, "SURE": 1.0}
 }
