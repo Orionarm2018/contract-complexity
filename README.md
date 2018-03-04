@@ -38,7 +38,7 @@ payload2score(
 ```
 This is a wrapper around `get_project_score`, which creates a temporary filesystem from the project data contained in the JSON payload.
 
-### Call Scorer with JSON payload ((Commandline)
+### Call Scorer with JSON payload (Commandline)
 Just like above, call `web_integration/payload2score.py --setup_path <path_to_setup_files> --payload_file <payload_file>` . 
 Additionally supply `payload_file`: path and filename of JSON payload.
 
