@@ -1,7 +1,7 @@
 {
-  "imports_zeppelin_num": -3,
+  "imports_zeppelin_ratio": -3,
   "imports_zeppelin": 0,
-  "len_files": 0,
+  "num_files": 0,
   "not_imported_ratio": 1,
   "import_depth_mean": 0.5,
   "import_depth_max": 1,
@@ -13,7 +13,7 @@
   "lines_max": 0,
   "is_ICO": -5,
   "has_token": 2,
-  "comments_ratio": 1,
+  "comments_to_src_ratio": 1,
   "'function'": 1,
   "return_per_returns": -0.25,
   "'returns'": 0.5,

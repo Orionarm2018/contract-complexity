@@ -11,24 +11,46 @@ from analyser import count_project_indicators_token, count_project_indicators_IC
 from tokenizer import tokenize_string_from_row
 
 
-def get_complete_df_files(data_path, save_path, project_class, company_name, include_zeppelin, verbose, join_all, max_depth):
+def get_complete_df_files(setup_args, project_class, company_name):
+    data_path = setup_args["data_path"]
+    save_path = setup_args["out_path"]
+    zeppelin_path = setup_args["zeppelin_path"]
+    include_zeppelin = setup_args["include_zeppelin"]
+    verbose = setup_args["verbose"]
+    join_all = setup_args["join_all"]
+    max_depth = setup_args["max_depth"]
 
     # get the df with basic infos for import matching
-    df_files = get_simple_df_files(data_path, save_path, project_class, company_name, verbose)
-
+    df_files = get_simple_df_files(
+            data_path=data_path,
+            save_path=save_path,
+            project_class=project_class,
+            company_name=company_name,
+            verbose=verbose,
+    )
     # all zeppelin files for importing files from there.
-    # Note: assumes zeppelin is in data_path
     if include_zeppelin:
         start_idx = max(df_files.index.values) + 1
         df_zeppelin = get_simple_df_files(
-            data_path, save_path=None, project_class='Zeppelin', company_name='Zeppelin', verbose=False, start_idx=start_idx)
+            data_path=zeppelin_path,
+            save_path=None,
+            project_class='Zeppelin',
+            company_name='Zeppelin',
+            verbose=False,
+            start_idx=start_idx
+        )
         # hacky fix to have zeppelin files also analysed for nested imports
         df_files = df_files.append(df_zeppelin)
     else:
         df_zeppelin = None
 
     # get inheritance depth and joined src and comment files
-    df = match_imports_with_files(df_files, files_zeppelin=df_zeppelin, import_only_inherited=True, verbose=verbose)
+    df = match_imports_with_files(
+        df_files,
+        files_zeppelin=df_zeppelin,
+        import_only_inherited=True,
+        verbose=verbose
+    )
     # find idxs of nested imports
     df = recurse_imports(df, join_all, max_depth, verbose)
     # join src and comments, drop import lines

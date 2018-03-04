@@ -1,6 +1,6 @@
 {
-  "imports_zeppelin_num": 0.5,
-  "len_files": 30,
+  "imports_zeppelin_ratio": 0.5,
+  "num_files": 30,
   "not_imported_ratio": 0.7,
   "import_depth_mean": 3,
   "import_depth_max": 7,
@@ -10,7 +10,7 @@
   "lines_total": 3000,
   "lines_mean": 600,
   "lines_max": 1000,
-  "comments_ratio": 0.3,
+  "comments_to_src_ratio": 0.3,
   "'function'": 200,
   "return_per_returns": 100,
   "'returns'": 150,

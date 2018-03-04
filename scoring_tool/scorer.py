@@ -187,9 +187,9 @@ def get_regex_metrics(df):
 def get_all_metrics(df, verbose, len_files, len_not_imported):
     metrics = {}
 
-    metrics['imports_zeppelin'], metrics['imports_zeppelin_num'] = get_metric_imports_zeppelin(df, verbose)
+    metrics['imports_zeppelin'], metrics['imports_zeppelin_ratio'] = get_metric_imports_zeppelin(df, verbose)
 
-    metrics['len_files'] = len_files
+    metrics['num_files'] = len_files
     metrics['not_imported_ratio'] = len_not_imported / (1.0 * len_files)
 
     imports_depths = df[df['is_imported'] == False].groupby(['class', 'company'])['imports_depth']
@@ -205,7 +205,7 @@ def get_all_metrics(df, verbose, len_files, len_not_imported):
     metrics['is_ICO'] = get_metric_ICO(df, verbose)
     metrics['has_token'] = get_metric_token(df, verbose)
 
-    metrics['comments_ratio'] = get_comments_to_src_ratio(df)
+    metrics['comments_to_src_ratio'] = get_comments_to_src_ratio(df)
 
     token_metrics = get_token_metrics(df)
     metrics.update(token_metrics)

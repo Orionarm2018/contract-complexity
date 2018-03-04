@@ -21,14 +21,9 @@ def get_project_score(setup_args, project_class, project_name):
         os.mkdir(out_path)
 
     df, len_files, len_not_imported = get_complete_df_files(
-        data_path=data_path,
-        save_path=out_path,
+        setup_args,
         project_class=project_class,
         company_name=project_name,
-        include_zeppelin=setup_args["include_zeppelin"],
-        verbose=setup_args["verbose"],
-        join_all=setup_args["join_all"],
-        max_depth=setup_args["max_depth"],
     )
     metrics = get_all_metrics(df, setup_args["verbose"], len_files, len_not_imported)
     metrics_norm = normalize_metrics(metrics, setup_args["categoric_norm"], setup_args["numeric_norm"])
@@ -63,9 +58,11 @@ def test_all(setup_args):
             print metrics_to_df
             metrics_to_df.update(metrics)
             df_metrics_this = pd.DataFrame.from_records([metrics_to_df])
-            name_individual_df = 'df_metrics_{}_{}.csv'.format(project_class, project_name)
+
             if setup_args["out_path"] is not None:
+                name_individual_df = 'df_metrics_{}_{}.csv'.format(project_class, project_name)
                 df_metrics_this.to_csv(os.path.join(out_path, name_individual_df))
+
             # add to all projects df
             df_metrics = df_metrics.append(df_metrics_this, ignore_index=True)
             index += 1
@@ -88,7 +85,10 @@ def load_setup_args(setup_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--setup_path", type=str, help="path of setup JSONs")
+    parser.add_argument(
+        "--setup_path", type=str, default="scoring_tool/setup/",
+        help="path of setup JSONs"
+    )
     args = parser.parse_args()
     setup_args = load_setup_args(args.setup_path)
 
